@@ -1,15 +1,7 @@
-from flask import Flask
+from flask import Flask, render_template
 from flask_cors import CORS
 
+app = Flask(__name__, template_folder='../templates')
+CORS(app)
 
-
-def create_app():
-
-    app = Flask(__name__)
-    CORS(app)
-
-    @app.route('/')
-    def helloWorld():
-        return "Hello Flask World"
-
-    return app
+from . import routes  # Import the routes after app is created
