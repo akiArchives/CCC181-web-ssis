@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, send_from_directory, current_app
+from flask import Blueprint, render_template, send_from_directory, current_app, jsonify
 import os
 
 main_bp = Blueprint('main', __name__)
@@ -17,3 +17,7 @@ def static_proxy(path):
     if os.path.exists(file_path):
         return send_from_directory(static_dir, path)
     return render_template('index.html')
+
+@main_bp.route('/api/hello')
+def api_hello():
+    return jsonify({ "message": "Hello from Flask" })

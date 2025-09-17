@@ -1,10 +1,28 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
+import './App.css'
+import Sidebar from './components/Sidebar'
+import { Routes, Route } from 'react-router-dom'
+import Home from './pages/Home'
+import Students from './pages/Students'
+import Programs from './pages/Programs'
+import Colleges from './pages/Colleges'
 
-export default function App() {
+export default function App(){
+
+
   return (
-    <div style={{padding:20}}>
-      <h1>CCC181 Frontend (Vite + React)</h1>
-      <p>This is the Vite-powered frontend. API paths under <code>/api</code> will be proxied to the Flask backend during `npm run dev`.</p>
+    <div className="app">
+      <Sidebar />
+      <main className="content-wrap">
+        <div className="card">
+          <Routes>
+            <Route path="/" element={<Home/>} />
+            <Route path="/students" element={<Students/>} />
+            <Route path="/programs" element={<Programs/>} />
+            <Route path="/colleges" element={<Colleges/>} />
+          </Routes>
+        </div>
+      </main>
     </div>
   )
 }
