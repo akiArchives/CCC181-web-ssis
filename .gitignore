@@ -13,6 +13,17 @@ ENV/
 # VSCode
 .vscode/
 
+# Github
+.github/
+
 # Mac/Windows system files
 .DS_Store
 Thumbs.db
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# Vite build outputs
+frontend/dist/
+backend/app/static/dist/
