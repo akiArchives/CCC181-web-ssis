@@ -20,8 +20,8 @@ export default function Sidebar(){
     <div className="spacer1" />
 
       <nav className="nav">
-        <Link to="/"> <HomeRoundedIcon className="icon" /> Home</Link>
-        <Link to="/students"> <PersonIcon className="icon" /> Students</Link>
+        {/* <Link to="/"> <HomeRoundedIcon className="icon" /> Home</Link> */}
+        <Link to="/"> <PersonIcon className="icon" /> Students</Link>
         <Link to="/programs"> <MenuBookRoundedIcon className="icon" /> Programs</Link>
         <Link to="/colleges"> <SchoolRoundedIcon className="icon" /> Colleges</Link>
       </nav>

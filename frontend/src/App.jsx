@@ -16,8 +16,8 @@ export default function App(){
       <main className="content-wrap">
         <div className="card">
           <Routes>
-            <Route path="/" element={<Home/>} />
-            <Route path="/students" element={<Students/>} />
+            {/* <Route path="/" element={<Home/>} /> */}
+            <Route path="/" element={<Students/>} />
             <Route path="/programs" element={<Programs/>} />
             <Route path="/colleges" element={<Colleges/>} />
           </Routes>
