@@ -1,16 +1,104 @@
 const API_URL = 'http://localhost:5000/api';
 
+// Module-scoped token to support environments where localStorage may fail.
+let authToken = null;
+try {
+  authToken = localStorage.getItem('token');
+} catch (e) {
+  // localStorage may be unavailable in some environments; fall back to memory only
+  authToken = null;
+}
+
+export const setAuthToken = (token) => {
+  authToken = token;
+  console.log('setAuthToken called, token present?', !!token);
+  try {
+    if (token) {
+      localStorage.setItem('token', token);
+    } else {
+      localStorage.removeItem('token');
+    }
+  } catch (e) {
+    // ignore localStorage failures
+  }
+};
+
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = authToken;
+  try {
+    if (token) {
+      // show only a masked portion of the token for debugging
+      const masked = `${token.slice(0, 8)}...${token.slice(-8)}`;
+      console.log('getAuthHeaders - token present:', true, 'masked:', masked);
+    } else {
+      console.log('getAuthHeaders - token present: false');
+    }
+  } catch (e) {
+    console.log('getAuthHeaders - token inspect failed', e);
+  }
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+};
+
 export const api = {
+  // Authentication
+  register: async (data) => {
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to register');
+    }
+    return response.json();
+  },
+  
+  login: async (data) => {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to login');
+    }
+    return response.json();
+  },
+  
+  getCurrentUser: async () => {
+    console.log('getCurrentUser - headers:', getAuthHeaders());
+    const response = await fetch(`${API_URL}/auth/me`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to get user');
+    }
+    return response.json();
+  },
+
   // Colleges
   getColleges: async (search = '') => {
-    const response = await fetch(`${API_URL}/colleges?search=${search}`);
+    const response = await fetch(`${API_URL}/colleges?search=${search}`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch colleges');
+    }
     return response.json();
   },
   
   createCollege: async (data) => {
     const response = await fetch(`${API_URL}/colleges`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
     if (!response.ok) {
@@ -23,7 +111,7 @@ export const api = {
   updateCollege: async (code, data) => {
     const response = await fetch(`${API_URL}/colleges/${code}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
     if (!response.ok) {
@@ -36,6 +124,7 @@ export const api = {
   deleteCollege: async (code) => {
     const response = await fetch(`${API_URL}/colleges/${code}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     });
     if (!response.ok) {
       const error = await response.json();
@@ -47,7 +136,7 @@ export const api = {
   bulkDeleteColleges: async (codes) => {
     const response = await fetch(`${API_URL}/colleges/bulk-delete`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ codes }),
     });
     if (!response.ok) {
@@ -63,14 +152,20 @@ export const api = {
     if (search) params.append('search', search);
     if (collegeCode) params.append('college_code', collegeCode);
     
-    const response = await fetch(`${API_URL}/programs?${params}`);
+    const response = await fetch(`${API_URL}/programs?${params}`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch programs');
+    }
     return response.json();
   },
   
   createProgram: async (data) => {
     const response = await fetch(`${API_URL}/programs`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
     if (!response.ok) {
@@ -83,7 +178,7 @@ export const api = {
   updateProgram: async (code, data) => {
     const response = await fetch(`${API_URL}/programs/${code}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
     if (!response.ok) {
@@ -96,6 +191,7 @@ export const api = {
   deleteProgram: async (code) => {
     const response = await fetch(`${API_URL}/programs/${code}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     });
     if (!response.ok) {
       const error = await response.json();
@@ -107,7 +203,7 @@ export const api = {
   bulkDeletePrograms: async (codes) => {
     const response = await fetch(`${API_URL}/programs/bulk-delete`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ codes }),
     });
     if (!response.ok) {
@@ -124,14 +220,20 @@ export const api = {
       if (value) params.append(key, value);
     });
     
-    const response = await fetch(`${API_URL}/students?${params}`);
+    const response = await fetch(`${API_URL}/students?${params}`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch students');
+    }
     return response.json();
   },
   
   createStudent: async (data) => {
     const response = await fetch(`${API_URL}/students`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
     if (!response.ok) {
@@ -144,7 +246,7 @@ export const api = {
   updateStudent: async (id, data) => {
     const response = await fetch(`${API_URL}/students/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify(data),
     });
     if (!response.ok) {
@@ -157,6 +259,7 @@ export const api = {
   deleteStudent: async (id) => {
     const response = await fetch(`${API_URL}/students/${id}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     });
     if (!response.ok) {
       const error = await response.json();
@@ -168,7 +271,7 @@ export const api = {
   bulkDeleteStudents: async (ids) => {
     const response = await fetch(`${API_URL}/students/bulk-delete`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ ids }),
     });
     if (!response.ok) {
@@ -180,7 +283,14 @@ export const api = {
 
   // Statistics
   getStatistics: async () => {
-    const response = await fetch(`${API_URL}/statistics`);
+    console.log('getStatistics - headers:', getAuthHeaders());
+    const response = await fetch(`${API_URL}/statistics`, {
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch statistics');
+    }
     return response.json();
   },
 };
