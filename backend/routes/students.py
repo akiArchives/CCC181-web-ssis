@@ -9,8 +9,20 @@ students_bp = Blueprint('students', __name__)
 @jwt_required()
 def get_students():
     search = request.args.get('search', '').strip()
-    students = StudentService.get_all_students(search)
-    return jsonify([student.to_dict() for student in students])
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    pagination = StudentService.get_all_students(search, page, per_page)
+    
+    return jsonify({
+        'data': [student.to_dict() for student in pagination.items],
+        'meta': {
+            'page': pagination.page,
+            'per_page': pagination.per_page,
+            'total_pages': pagination.pages,
+            'total_items': pagination.total
+        }
+    })
 
 @students_bp.route('', methods=['POST'])
 @jwt_required()

@@ -1,9 +1,10 @@
 from models import db, Student, Program
 from sqlalchemy import or_
+import re
 
 class StudentService:
     @staticmethod
-    def get_all_students(search_term=None):
+    def get_all_students(search_term=None, page=None, per_page=None):
         """Retrieves all students, with an optional search filter."""
         query = Student.query
         if search_term:
@@ -14,6 +15,10 @@ class StudentService:
                     Student.last_name.ilike(f'%{search_term}%')
                 )
             )
+            
+        if page is not None and per_page is not None:
+            return query.paginate(page=page, per_page=per_page, error_out=False)
+            
         return query.all()
 
     @staticmethod
@@ -33,6 +38,9 @@ class StudentService:
                 raise ValueError(f'Missing required field: {field}')
 
         student_id = data['id'].strip().upper()
+        if not re.match(r'^\d{4}-\d{4}$', student_id):
+            raise ValueError('Student ID must follow the format NNNN-NNNN (e.g., 2021-0001)')
+
         program_code = data['program_code'].strip().upper()
 
         if Student.query.get(student_id):
@@ -58,6 +66,9 @@ class StudentService:
     def update_student(student, data):
         """Updates an existing student."""
         new_id = data.get('id', student.id).strip().upper()
+        if not re.match(r'^\d{4}-\d{4}$', new_id):
+            raise ValueError('Student ID must follow the format NNNN-NNNN (e.g., 2021-0001)')
+
         if new_id != student.id and Student.query.get(new_id):
             raise ValueError('New Student ID already exists')
         

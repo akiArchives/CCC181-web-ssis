@@ -9,8 +9,20 @@ colleges_bp = Blueprint('colleges', __name__)
 @jwt_required()
 def get_colleges():
     search = request.args.get('search', '').strip()
-    colleges = CollegeService.get_all_colleges(search)
-    return jsonify([college.to_dict() for college in colleges])
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    pagination = CollegeService.get_all_colleges(search, page, per_page)
+    
+    return jsonify({
+        'data': [college.to_dict() for college in pagination.items],
+        'meta': {
+            'page': pagination.page,
+            'per_page': pagination.per_page,
+            'total_pages': pagination.pages,
+            'total_items': pagination.total
+        }
+    })
 
 @colleges_bp.route('', methods=['POST'])
 @jwt_required()

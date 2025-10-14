@@ -3,52 +3,46 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trash2, Edit, Plus, Search, AlertCircle } from 'lucide-react';
+import { Trash2, Edit, Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 const CollegeManagement = () => {
   const [colleges, setColleges] = useState([]);
-  const [filteredColleges, setFilteredColleges] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedColleges, setSelectedColleges] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCollege, setEditingCollege] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'code', direction: 'asc' });
-  const [error, setError] = useState('');
+  const { addToast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   
   const [formData, setFormData] = useState({ code: '', name: '' });
   const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     fetchColleges();
-  }, []);
+  }, [currentPage]);
 
-  useEffect(() => {
-    const filtered = colleges.filter(college =>
-      college.code.toLowerCase().includes(search.toLowerCase()) ||
-      college.name.toLowerCase().includes(search.toLowerCase())
-    );
-    
-    const sorted = [...filtered].sort((a, b) => {
+  const displayedColleges = React.useMemo(() => {
+    return [...colleges].sort((a, b) => {
       const aVal = a[sortConfig.key] || '';
       const bVal = b[sortConfig.key] || '';
       if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
-    
-    setFilteredColleges(sorted);
-  }, [colleges, search, sortConfig]);
+  }, [colleges, sortConfig]);
 
   const fetchColleges = async () => {
     try {
-      const data = await api.getColleges(search);
-      setColleges(data);
-      setError('');
+      const response = await api.getColleges(search, currentPage);
+      setColleges(response.data);
+      setTotalPages(response.meta.total_pages);
     } catch (err) {
-      setError('Failed to fetch colleges');
+      addToast('Failed to fetch colleges', 'error');
     }
   };
 
@@ -57,6 +51,15 @@ const CollegeManagement = () => {
       key,
       direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     });
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (currentPage === 1) {
+      fetchColleges();
+    } else {
+      setCurrentPage(1);
+    }
   };
 
   const validateForm = () => {
@@ -79,9 +82,9 @@ const CollegeManagement = () => {
       }
       fetchColleges();
       closeDialog();
-      setError('');
+      addToast(editingCollege ? 'College updated successfully' : 'College created successfully', 'success');
     } catch (err) {
-      setError(err.message);
+      addToast(err.message, 'error');
     }
   };
 
@@ -91,9 +94,9 @@ const CollegeManagement = () => {
     try {
       await api.deleteCollege(code);
       fetchColleges();
-      setError('');
+      addToast('College deleted successfully', 'success');
     } catch (err) {
-      setError(err.message);
+      addToast(err.message, 'error');
     }
   };
 
@@ -104,9 +107,9 @@ const CollegeManagement = () => {
       await api.bulkDeleteColleges(selectedColleges);
       setSelectedColleges([]);
       fetchColleges();
-      setError('');
+      addToast(`${selectedColleges.length} colleges deleted successfully`, 'success');
     } catch (err) {
-      setError(err.message);
+      addToast(err.message, 'error');
     }
   };
 
@@ -119,7 +122,6 @@ const CollegeManagement = () => {
       setFormData({ code: '', name: '' });
     }
     setFormErrors({});
-    setError('');
     setIsDialogOpen(true);
   };
 
@@ -138,31 +140,24 @@ const CollegeManagement = () => {
 
   const toggleSelectAll = () => {
     setSelectedColleges(
-      selectedColleges.length === filteredColleges.length
+      selectedColleges.length === colleges.length
         ? []
-        : filteredColleges.map(c => c.code)
+        : colleges.map(c => c.code)
     );
   };
 
   return (
-    <div>
-      <div className="mb-6">
+    <div className="h-full flex flex-col">
+      <div className="mb-6 shrink-0">
         <h1 className="text-3xl font-bold mb-2">College Management</h1>
         <p className="text-gray-600">Manage academic colleges and their information</p>
       </div>
 
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <Card>
-        <CardHeader>
+      <Card className="w-full flex-1 flex flex-col min-h-0">
+        <CardHeader className="shrink-0">
           <div className="flex justify-between items-center">
             <div className="flex gap-2 flex-1">
-              <div className="relative flex-1 max-w-sm">
+              <form onSubmit={handleSearch} className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search colleges..."
@@ -170,7 +165,7 @@ const CollegeManagement = () => {
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10"
                 />
-              </div>
+              </form>
             </div>
             <div className="flex gap-2">
               {selectedColleges.length > 0 && (
@@ -186,15 +181,15 @@ const CollegeManagement = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="border rounded-lg">
+        <CardContent className="flex-1 min-h-0 overflow-hidden">
+          <div className="border rounded-lg w-full h-full overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
                     <input
                       type="checkbox"
-                      checked={selectedColleges.length === filteredColleges.length && filteredColleges.length > 0}
+                      checked={selectedColleges.length === colleges.length && colleges.length > 0}
                       onChange={toggleSelectAll}
                       className="rounded"
                     />
@@ -216,14 +211,14 @@ const CollegeManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredColleges.length === 0 ? (
+                {displayedColleges.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                       No colleges found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredColleges.map(college => (
+                  displayedColleges.map(college => (
                     <TableRow key={college.code}>
                       <TableCell>
                         <input
@@ -261,6 +256,29 @@ const CollegeManagement = () => {
             </Table>
           </div>
         </CardContent>
+        <div className="flex items-center justify-end space-x-2 p-4 border-t shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          <div className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

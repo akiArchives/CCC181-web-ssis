@@ -4,23 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit, Plus, Search, AlertCircle } from 'lucide-react';
+import { Trash2, Edit, Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 const StudentManagement = () => {
   const [students, setStudents] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [colleges, setColleges] = useState([]);
-  const [filteredStudents, setFilteredStudents] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
-  const [error, setError] = useState('');
+  const { addToast } = useToast();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   
   const [formData, setFormData] = useState({
     id: '',
@@ -34,44 +35,37 @@ const StudentManagement = () => {
 
   useEffect(() => {
     fetchStudents();
+  }, [currentPage]);
+
+  useEffect(() => {
     fetchPrograms();
     fetchColleges();
   }, []);
 
-  useEffect(() => {
-    const filtered = students.filter(student =>
-      student.id.toLowerCase().includes(search.toLowerCase()) ||
-      student.first_name.toLowerCase().includes(search.toLowerCase()) ||
-      student.last_name.toLowerCase().includes(search.toLowerCase()) ||
-      student.program_name?.toLowerCase().includes(search.toLowerCase()) ||
-      student.college_name?.toLowerCase().includes(search.toLowerCase())
-    );
-    
-    const sorted = [...filtered].sort((a, b) => {
+  const displayedStudents = React.useMemo(() => {
+    return [...students].sort((a, b) => {
       const aVal = a[sortConfig.key] || '';
       const bVal = b[sortConfig.key] || '';
       if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
-    
-    setFilteredStudents(sorted);
-  }, [students, search, sortConfig]);
+  }, [students, sortConfig]);
 
   const fetchStudents = async () => {
     try {
-      const data = await api.getStudents({ search });
-      setStudents(data);
-      setError('');
+      const response = await api.getStudents({ search }, currentPage);
+      setStudents(response.data);
+      setTotalPages(response.meta.total_pages);
     } catch (err) {
-      setError('Failed to fetch students');
+      addToast('Failed to fetch students', 'error');
     }
   };
 
   const fetchPrograms = async () => {
     try {
-      const data = await api.getPrograms();
-      setPrograms(data);
+      const response = await api.getPrograms('', '', 1, 100);
+      setPrograms(response.data);
     } catch (err) {
       console.error('Error fetching programs:', err);
     }
@@ -79,8 +73,8 @@ const StudentManagement = () => {
 
   const fetchColleges = async () => {
     try {
-      const data = await api.getColleges();
-      setColleges(data);
+      const response = await api.getColleges('', 1, 100);
+      setColleges(response.data);
     } catch (err) {
       console.error('Error fetching colleges:', err);
     }
@@ -91,6 +85,15 @@ const StudentManagement = () => {
       key,
       direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     });
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (currentPage === 1) {
+      fetchStudents();
+    } else {
+      setCurrentPage(1);
+    }
   };
 
   const validateForm = () => {
@@ -117,9 +120,9 @@ const StudentManagement = () => {
       }
       fetchStudents();
       closeDialog();
-      setError('');
+      addToast(editingStudent ? 'Student updated successfully' : 'Student created successfully', 'success');
     } catch (err) {
-      setError(err.message);
+      addToast(err.message, 'error');
     }
   };
 
@@ -129,9 +132,9 @@ const StudentManagement = () => {
     try {
       await api.deleteStudent(id);
       fetchStudents();
-      setError('');
+      addToast('Student deleted successfully', 'success');
     } catch (err) {
-      setError(err.message);
+      addToast(err.message, 'error');
     }
   };
 
@@ -142,9 +145,9 @@ const StudentManagement = () => {
       await api.bulkDeleteStudents(selectedStudents);
       setSelectedStudents([]);
       fetchStudents();
-      setError('');
+      addToast(`${selectedStudents.length} students deleted successfully`, 'success');
     } catch (err) {
-      setError(err.message);
+      addToast(err.message, 'error');
     }
   };
 
@@ -171,7 +174,6 @@ const StudentManagement = () => {
       });
     }
     setFormErrors({});
-    setError('');
     setIsDialogOpen(true);
   };
 
@@ -197,9 +199,9 @@ const StudentManagement = () => {
 
   const toggleSelectAll = () => {
     setSelectedStudents(
-      selectedStudents.length === filteredStudents.length
+      selectedStudents.length === students.length
         ? []
-        : filteredStudents.map(s => s.id)
+        : students.map(s => s.id)
     );
   };
 
@@ -214,24 +216,17 @@ const StudentManagement = () => {
   };
 
   return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Student Management</h1>
+    <div className="h-full flex flex-col">
+      <div className="mb-6 shrink-0">
+        <h1 className="text-2xl font-bold mb-1">Student Management</h1>
         <p className="text-gray-600">Manage student records and information</p>
       </div>
 
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <Card>
-        <CardHeader>
+      <Card className="w-full flex-1 flex flex-col min-h-0">
+        <CardHeader className="shrink-0">
           <div className="flex justify-between items-center">
             <div className="flex gap-2 flex-1">
-              <div className="relative flex-1 max-w-sm">
+              <form onSubmit={handleSearch} className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search students..."
@@ -239,7 +234,7 @@ const StudentManagement = () => {
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10"
                 />
-              </div>
+              </form>
             </div>
             <div className="flex gap-2">
               {selectedStudents.length > 0 && (
@@ -255,15 +250,15 @@ const StudentManagement = () => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="border rounded-lg">
+        <CardContent className="flex-1 min-h-0 overflow-hidden">
+          <div className="border rounded-lg w-full h-full overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-12">
                     <input
                       type="checkbox"
-                      checked={selectedStudents.length === filteredStudents.length && filteredStudents.length > 0}
+                      checked={selectedStudents.length === students.length && students.length > 0}
                       onChange={toggleSelectAll}
                       className="rounded"
                     />
@@ -294,14 +289,14 @@ const StudentManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredStudents.length === 0 ? (
+                {displayedStudents.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                       No students found
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredStudents.map(student => (
+                  displayedStudents.map(student => (
                     <TableRow key={student.id}>
                       <TableCell>
                         <input
@@ -347,6 +342,29 @@ const StudentManagement = () => {
             </Table>
           </div>
         </CardContent>
+        <div className="flex items-center justify-end space-x-2 p-4 border-t shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </Button>
+          <div className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

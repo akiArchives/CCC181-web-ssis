@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, GraduationCap, Building2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useToast } from '@/contexts/ToastContext';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -9,6 +10,7 @@ const Dashboard = () => {
     total_programs: 0,
     total_colleges: 0
   });
+  const { addToast } = useToast();
 
   useEffect(() => {
     fetchStats();
@@ -19,7 +21,7 @@ const Dashboard = () => {
       const data = await api.getStatistics();
       setStats(data);
     } catch (error) {
-      console.error('Error fetching statistics:', error);
+      addToast('Failed to fetch dashboard statistics', 'error');
     }
   };
 
@@ -48,7 +50,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div>
+    <div className="h-full overflow-y-auto">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">Dashboard</h1>
         <p className="text-gray-600">Welcome to the Student Information System</p>

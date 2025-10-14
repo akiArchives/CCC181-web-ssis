@@ -9,8 +9,20 @@ programs_bp = Blueprint('programs', __name__)
 @jwt_required()
 def get_programs():
     search = request.args.get('search', '').strip()
-    programs = ProgramService.get_all_programs(search)
-    return jsonify([program.to_dict() for program in programs])
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    
+    pagination = ProgramService.get_all_programs(search, page, per_page)
+    
+    return jsonify({
+        'data': [program.to_dict() for program in pagination.items],
+        'meta': {
+            'page': pagination.page,
+            'per_page': pagination.per_page,
+            'total_pages': pagination.pages,
+            'total_items': pagination.total
+        }
+    })
 
 @programs_bp.route('', methods=['POST'])
 @jwt_required()

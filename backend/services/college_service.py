@@ -3,7 +3,7 @@ from sqlalchemy import or_
 
 class CollegeService:
     @staticmethod
-    def get_all_colleges(search_term=None):
+    def get_all_colleges(search_term=None, page=None, per_page=None):
         """Retrieves all colleges, with an optional search filter."""
         query = College.query
         if search_term:
@@ -13,6 +13,10 @@ class CollegeService:
                     College.name.ilike(f'%{search_term}%')
                 )
             )
+        
+        if page is not None and per_page is not None:
+            return query.paginate(page=page, per_page=per_page, error_out=False)
+            
         return query.all()
 
     @staticmethod

@@ -5,7 +5,6 @@ let authToken = null;
 try {
   authToken = localStorage.getItem('token');
 } catch (e) {
-  // localStorage may be unavailable in some environments; fall back to memory only
   authToken = null;
 }
 
@@ -84,8 +83,13 @@ export const api = {
   },
 
   // Colleges
-  getColleges: async (search = '') => {
-    const response = await fetch(`${API_URL}/colleges?search=${search}`, {
+  getColleges: async (search = '', page = 1, limit = 10) => {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (page) params.append('page', page);
+    if (limit) params.append('per_page', limit);
+
+    const response = await fetch(`${API_URL}/colleges?${params}`, {
       headers: getAuthHeaders(),
     });
     if (!response.ok) {
@@ -147,10 +151,12 @@ export const api = {
   },
 
   // Programs
-  getPrograms: async (search = '', collegeCode = '') => {
+  getPrograms: async (search = '', collegeCode = '', page = 1, limit = 10) => {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (collegeCode) params.append('college_code', collegeCode);
+    if (page) params.append('page', page);
+    if (limit) params.append('per_page', limit);
     
     const response = await fetch(`${API_URL}/programs?${params}`, {
       headers: getAuthHeaders(),
@@ -214,8 +220,11 @@ export const api = {
   },
 
   // Students
-  getStudents: async (filters = {}) => {
+  getStudents: async (filters = {}, page = 1, limit = 10) => {
     const params = new URLSearchParams();
+    if (page) params.append('page', page);
+    if (limit) params.append('per_page', limit);
+
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.append(key, value);
     });
