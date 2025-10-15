@@ -18,13 +18,14 @@ const CollegeManagement = () => {
   const { addToast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
   
   const [formData, setFormData] = useState({ code: '', name: '' });
   const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     fetchColleges();
-  }, [currentPage]);
+  }, [currentPage, itemsPerPage]);
 
   const displayedColleges = React.useMemo(() => {
     return [...colleges].sort((a, b) => {
@@ -38,7 +39,7 @@ const CollegeManagement = () => {
 
   const fetchColleges = async () => {
     try {
-      const response = await api.getColleges(search, currentPage);
+      const response = await api.getColleges(search, currentPage, itemsPerPage);
       setColleges(response.data);
       setTotalPages(response.meta.total_pages);
     } catch (err) {
@@ -147,17 +148,16 @@ const CollegeManagement = () => {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full overflow-y-auto">
       <div className="mb-6 shrink-0">
         <h1 className="text-3xl font-bold mb-2">College Management</h1>
         <p className="text-gray-600">Manage academic colleges and their information</p>
       </div>
 
-      <Card className="w-full flex-1 flex flex-col min-h-0">
+      <Card className="w-full">
         <CardHeader className="shrink-0">
-          <div className="flex justify-between items-center">
-            <div className="flex gap-2 flex-1">
-              <form onSubmit={handleSearch} className="relative flex-1 max-w-sm">
+          <div className="flex items-center justify-between gap-4">
+            <form onSubmit={handleSearch} className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search colleges..."
@@ -165,9 +165,9 @@ const CollegeManagement = () => {
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10"
                 />
-              </form>
-            </div>
-            <div className="flex gap-2">
+            </form>
+            <div className="flex items-center gap-4">
+              <div className="flex gap-2">
               {selectedColleges.length > 0 && (
                 <Button variant="destructive" onClick={handleBulkDelete}>
                   <Trash2 className="h-4 w-4 mr-2" />
@@ -178,11 +178,33 @@ const CollegeManagement = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Add College
               </Button>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="text-sm text-gray-600">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="flex-1 min-h-0 overflow-hidden">
-          <div className="border rounded-lg w-full h-full overflow-auto">
+        <CardContent>
+          <div className="border rounded-lg w-full overflow-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -256,29 +278,6 @@ const CollegeManagement = () => {
             </Table>
           </div>
         </CardContent>
-        <div className="flex items-center justify-end space-x-2 p-4 border-t shrink-0">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </Button>
-          <div className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
