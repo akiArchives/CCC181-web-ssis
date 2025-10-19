@@ -7,7 +7,13 @@ import Dashboard from './components/Dashboard';
 import CollegeManagement from './components/CollegeManagement';
 import ProgramManagement from './components/ProgramManagement';
 import StudentManagement from './components/StudentManagement';
-import { Users, GraduationCap, Building2, LayoutDashboard, LogOut, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { GraduationCap, LogOut, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { 
+  HiOutlineSquares2X2, HiSquares2X2, 
+  HiOutlineUsers, HiUsers, 
+  HiOutlineAcademicCap, HiAcademicCap, 
+  HiOutlineBuildingLibrary, HiBuildingLibrary 
+} from 'react-icons/hi2';
 import { Button } from './components/ui/button';
 import './App.css';
 
@@ -37,10 +43,10 @@ function AppContent() {
   }
 
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'students', label: 'Students', icon: Users },
-    { id: 'programs', label: 'Programs', icon: GraduationCap },
-    { id: 'colleges', label: 'Colleges', icon: Building2 }
+    { id: 'dashboard', label: 'Dashboard', icon: HiOutlineSquares2X2, activeIcon: HiSquares2X2 },
+    { id: 'students', label: 'Students', icon: HiOutlineUsers, activeIcon: HiUsers },
+    { id: 'programs', label: 'Programs', icon: HiOutlineAcademicCap, activeIcon: HiAcademicCap },
+    { id: 'colleges', label: 'Colleges', icon: HiOutlineBuildingLibrary, activeIcon: HiBuildingLibrary }
   ];
 
   const renderContent = () => {
@@ -87,7 +93,7 @@ function AppContent() {
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {tabs.map((tab) => {
-            const Icon = tab.icon;
+            const Icon = activeTab === tab.id ? tab.activeIcon : tab.icon;
             return (
               <button
                 key={tab.id}

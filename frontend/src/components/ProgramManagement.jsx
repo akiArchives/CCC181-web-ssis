@@ -174,12 +174,12 @@ const ProgramManagement = () => {
         <CardHeader className="shrink-0">
           <div className="flex items-center justify-between gap-4">
             <form onSubmit={handleSearch} className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#004643]/50 h-4 w-4" />
                 <Input
                   placeholder="Search programs..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 bg-white border-[#004643]/20 focus-visible:ring-[#004643]"
                 />
             </form>
             <div className="flex items-center gap-4">
@@ -306,7 +306,7 @@ const ProgramManagement = () => {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-[#F7F5F0] border-[#004643]/10">
           <DialogHeader>
             <DialogTitle>{editingProgram ? 'Edit Program' : 'Add Program'}</DialogTitle>
             <DialogDescription>
@@ -355,10 +355,10 @@ const ProgramManagement = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={closeDialog}>
+              <Button type="button" variant="outline" onClick={closeDialog} className="border-[#004643]/20 text-[#004643] hover:bg-[#004643]/10 hover:text-[#004643]">
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" className="bg-[#004643] hover:bg-[#004643]/90">
                 {editingProgram ? 'Update' : 'Create'}
               </Button>
             </DialogFooter>
