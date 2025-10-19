@@ -22,7 +22,7 @@ const StudentManagement = () => {
   const { addToast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [itemsPerPage, setItemsPerPage] = useState(7);
   
   const [formData, setFormData] = useState({
     id: '',
@@ -208,10 +208,10 @@ const StudentManagement = () => {
 
   const getYearLevelBadge = (year) => {
     const colors = {
-      1: 'bg-green-100 text-green-800',
-      2: 'bg-blue-100 text-blue-800',
-      3: 'bg-yellow-100 text-yellow-800',
-      4: 'bg-purple-100 text-purple-800'
+      1: 'bg-[#004643]/10 text-[#004643]',
+      2: 'bg-[#004643]/20 text-[#004643]',
+      3: 'bg-[#004643]/30 text-[#004643]',
+      4: 'bg-[#004643]/40 text-[#004643]'
     };
     return colors[year] || 'bg-gray-100 text-gray-800';
   };
@@ -220,10 +220,9 @@ const StudentManagement = () => {
     <div className="h-full overflow-y-auto">
       <div className="mb-6 shrink-0">
         <h1 className="text-2xl font-bold mb-1">Student Management</h1>
-        <p className="text-gray-600">Manage student records and information</p>
       </div>
 
-      <Card className="w-full">
+      <Card className="w-full bg-[#F7F5F0] border-[#004643]/10">
         <CardHeader className="shrink-0">
           <div className="flex items-center justify-between gap-4">
             <form onSubmit={handleSearch} className="relative flex-1 max-w-sm">
@@ -243,7 +242,7 @@ const StudentManagement = () => {
                   Delete ({selectedStudents.length})
                 </Button>
               )}
-              <Button onClick={() => openDialog()}>
+              <Button onClick={() => openDialog()} className="bg-[#004643] hover:bg-[#004643]/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Student
               </Button>
@@ -286,19 +285,19 @@ const StudentManagement = () => {
                     />
                   </TableHead>
                   <TableHead
-                    className="cursor-pointer hover:bg-gray-50"
+                    className="cursor-pointer hover:bg-[#004643]/5"
                     onClick={() => handleSort('id')}
                   >
                     ID {sortConfig.key === 'id' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </TableHead>
                   <TableHead
-                    className="cursor-pointer hover:bg-gray-50"
+                    className="cursor-pointer hover:bg-[#004643]/5"
                     onClick={() => handleSort('first_name')}
                   >
                     First Name {sortConfig.key === 'first_name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </TableHead>
                   <TableHead
-                    className="cursor-pointer hover:bg-gray-50"
+                    className="cursor-pointer hover:bg-[#004643]/5"
                     onClick={() => handleSort('last_name')}
                   >
                     Last Name {sortConfig.key === 'last_name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
@@ -343,14 +342,16 @@ const StudentManagement = () => {
                         <div className="flex gap-2 justify-end">
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="ghost"
+                            className="text-gray-500 hover:text-[#004643] hover:bg-[#004643]/10"
                             onClick={() => openDialog(student)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
-                            variant="destructive"
+                            variant="ghost"
+                            className="text-gray-500 hover:text-red-600 hover:bg-red-50"
                             onClick={() => handleDelete(student.id)}
                           >
                             <Trash2 className="h-4 w-4" />

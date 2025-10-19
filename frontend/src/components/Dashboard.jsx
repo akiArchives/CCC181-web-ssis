@@ -31,21 +31,21 @@ const Dashboard = () => {
       value: stats.total_students,
       icon: Users,
       description: 'Enrolled students',
-      color: 'text-blue-600'
+      color: 'text-[#004643]'
     },
     {
       title: 'Total Programs',
       value: stats.total_programs,
       icon: GraduationCap,
       description: 'Available programs',
-      color: 'text-green-600'
+      color: 'text-[#004643]'
     },
     {
       title: 'Total Colleges',
       value: stats.total_colleges,
       icon: Building2,
       description: 'Academic colleges',
-      color: 'text-purple-600'
+      color: 'text-[#004643]'
     }
   ];
 
@@ -60,7 +60,7 @@ const Dashboard = () => {
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Card key={index}>
+            <Card key={index} className="bg-[#F7F5F0] border-[#004643]/10">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
                   {stat.title}
@@ -78,7 +78,7 @@ const Dashboard = () => {
         })}
       </div>
 
-      <Card className="mt-8">
+      <Card className="mt-8 bg-[#F7F5F0] border-[#004643]/10">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>

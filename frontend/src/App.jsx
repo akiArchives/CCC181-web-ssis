@@ -19,9 +19,9 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#F0EDE5]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#004643] mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -59,12 +59,12 @@ function AppContent() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-[#F0EDE5] overflow-hidden">
       {/* Sidebar */}
-      <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-white border-r shadow-sm flex flex-col fixed h-full z-20 transition-all duration-300`}>
-        <div className={`${isCollapsed ? 'p-4' : 'p-6'} border-b relative transition-all duration-300`}>
+      <aside className={`${isCollapsed ? 'w-20' : 'w-64'} bg-[#F0EDE5] border-r border-[#004643]/10 shadow-sm flex flex-col fixed h-full z-20 transition-all duration-300`}>
+        <div className={`${isCollapsed ? 'p-4' : 'p-6'} border-b border-[#004643]/10 relative transition-all duration-300`}>
           <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="bg-blue-600 p-2 rounded-lg shrink-0">
+            <div className="bg-[#004643] p-2 rounded-lg shrink-0">
               <GraduationCap className="h-6 w-6 text-white" />
             </div>
             {!isCollapsed && (
@@ -79,7 +79,7 @@ function AppContent() {
           
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute -right-3 top-1/2 transform -translate-y-1/2 bg-white border shadow-sm rounded-full p-1 hover:bg-gray-100 text-gray-500 z-50"
+            className="absolute -right-3 top-1/2 transform -translate-y-1/2 bg-[#F0EDE5] border border-[#004643]/10 shadow-sm rounded-full p-1 hover:bg-[#004643]/10 text-[#004643] z-50"
           >
             {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
@@ -95,8 +95,8 @@ function AppContent() {
                 title={isCollapsed ? tab.label : ''}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    ? 'bg-[#004643]/10 text-[#004643]'
+                    : 'text-gray-600 hover:bg-[#004643]/5 hover:text-gray-900'
                 } ${isCollapsed ? 'justify-center' : ''}`}
               >
                 <Icon className="h-5 w-5 shrink-0" />
@@ -106,10 +106,10 @@ function AppContent() {
           })}
         </nav>
 
-        <div className="p-4 border-t bg-gray-50">
+        <div className="p-4 border-t border-[#004643]/10 bg-[#004643]/5">
           <div className={`flex items-center gap-3 mb-4 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="bg-blue-100 p-2 rounded-full shrink-0">
-              <User className="h-4 w-4 text-blue-600" />
+            <div className="bg-[#004643]/10 p-2 rounded-full shrink-0">
+              <User className="h-4 w-4 text-[#004643]" />
             </div>
             {!isCollapsed && (
               <div className="overflow-hidden">
@@ -117,7 +117,7 @@ function AppContent() {
                   {user?.full_name}
                 </p>
                 {user?.role === 'admin' && (
-                  <span className="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px] font-medium uppercase">
+                  <span className="px-1.5 py-0.5 bg-[#004643]/10 text-[#004643] rounded text-[10px] font-medium uppercase">
                     Admin
                   </span>
                 )}
@@ -125,8 +125,8 @@ function AppContent() {
             )}
           </div>
           <Button 
-            variant="outline" 
-            className={`w-full ${isCollapsed ? 'justify-center px-2' : 'justify-start'} text-red-600 hover:text-red-700 hover:bg-red-50`} 
+            variant="ghost" 
+            className={`w-full ${isCollapsed ? 'justify-center px-2' : 'justify-start'} text-gray-600 hover:text-red-600 hover:bg-red-50`} 
             onClick={logout}
             title={isCollapsed ? "Logout" : ""}
           >

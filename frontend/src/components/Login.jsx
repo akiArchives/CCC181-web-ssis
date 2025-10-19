@@ -27,11 +27,11 @@ const Login = ({ onSwitchToRegister }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="min-h-screen bg-[#F0EDE5] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-xl bg-[#F7F5F0] border-[#004643]/10">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
-            <div className="bg-blue-600 p-4 rounded-full">
+            <div className="bg-[#004643] p-4 rounded-full">
               <GraduationCap className="h-12 w-12 text-white" />
             </div>
           </div>
@@ -75,7 +75,7 @@ const Login = ({ onSwitchToRegister }) => {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-[#004643] hover:bg-[#004643]/90" disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -92,7 +92,7 @@ const Login = ({ onSwitchToRegister }) => {
               Don't have an account?{' '}
               <button
                 onClick={onSwitchToRegister}
-                className="text-blue-600 hover:underline font-medium"
+                className="text-[#004643] hover:underline font-medium"
                 disabled={loading}
               >
                 Register here
@@ -100,10 +100,10 @@ const Login = ({ onSwitchToRegister }) => {
             </p>
           </div>
 
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
-            <p className="font-medium text-blue-900 mb-1">Demo Credentials:</p>
-            <p className="text-blue-700">Username: <strong>admin</strong></p>
-            <p className="text-blue-700">Password: <strong>admin123</strong></p>
+          <div className="mt-4 p-3 bg-[#004643]/10 rounded-lg text-sm">
+            <p className="font-medium text-[#004643] mb-1">Demo Credentials:</p>
+            <p className="text-[#004643]/80">Username: <strong>admin</strong></p>
+            <p className="text-[#004643]/80">Password: <strong>admin123</strong></p>
           </div>
         </CardContent>
       </Card>

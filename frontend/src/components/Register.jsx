@@ -56,11 +56,11 @@ const Register = ({ onSwitchToLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="min-h-screen bg-[#F0EDE5] flex items-center justify-center p-4">
+      <Card className="w-full max-w-md shadow-xl bg-[#F7F5F0] border-[#004643]/10">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
-            <div className="bg-blue-600 p-4 rounded-full">
+            <div className="bg-[#004643] p-4 rounded-full">
               <GraduationCap className="h-12 w-12 text-white" />
             </div>
           </div>
@@ -80,7 +80,7 @@ const Register = ({ onSwitchToLogin }) => {
           )}
 
           {success && (
-            <Alert className="mb-4 bg-green-50 text-green-900 border-green-200">
+            <Alert className="mb-4 bg-[#004643]/10 text-[#004643] border-[#004643]/20">
               <CheckCircle className="h-4 w-4" />
               <AlertDescription>
                 Registration successful! Redirecting to login...
@@ -149,7 +149,7 @@ const Register = ({ onSwitchToLogin }) => {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading || success}>
+            <Button type="submit" className="w-full bg-[#004643] hover:bg-[#004643]/90" disabled={loading || success}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -166,7 +166,7 @@ const Register = ({ onSwitchToLogin }) => {
               Already have an account?{' '}
               <button
                 onClick={onSwitchToLogin}
-                className="text-blue-600 hover:underline font-medium"
+                className="text-[#004643] hover:underline font-medium"
                 disabled={loading || success}
               >
                 Sign in here

@@ -39,8 +39,8 @@ export const ToastProvider = ({ children }) => {
               pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg text-white min-w-[300px] max-w-md
               animate-in slide-in-from-right fade-in duration-300
               ${toast.type === 'error' ? 'bg-red-600' : 
-                toast.type === 'success' ? 'bg-green-600' : 
-                'bg-blue-600'}
+                toast.type === 'success' ? 'bg-[#004643]' : 
+                'bg-[#004643]'}
             `}
           >
             {toast.type === 'error' && <AlertCircle className="h-5 w-5 shrink-0" />}

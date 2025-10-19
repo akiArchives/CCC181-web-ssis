@@ -18,7 +18,7 @@ const CollegeManagement = () => {
   const { addToast } = useToast();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [itemsPerPage, setItemsPerPage] = useState(7);
   
   const [formData, setFormData] = useState({ code: '', name: '' });
   const [formErrors, setFormErrors] = useState({});
@@ -150,11 +150,10 @@ const CollegeManagement = () => {
   return (
     <div className="h-full overflow-y-auto">
       <div className="mb-6 shrink-0">
-        <h1 className="text-3xl font-bold mb-2">College Management</h1>
-        <p className="text-gray-600">Manage academic colleges and their information</p>
+        <h1 className="text-2xl font-bold mb-1">College Management</h1>
       </div>
 
-      <Card className="w-full">
+      <Card className="w-full bg-[#F7F5F0] border-[#004643]/10">
         <CardHeader className="shrink-0">
           <div className="flex items-center justify-between gap-4">
             <form onSubmit={handleSearch} className="relative flex-1 max-w-sm">
@@ -174,7 +173,7 @@ const CollegeManagement = () => {
                   Delete ({selectedColleges.length})
                 </Button>
               )}
-              <Button onClick={() => openDialog()}>
+              <Button onClick={() => openDialog()} className="bg-[#004643] hover:bg-[#004643]/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Add College
               </Button>
@@ -217,13 +216,13 @@ const CollegeManagement = () => {
                     />
                   </TableHead>
                   <TableHead
-                    className="cursor-pointer hover:bg-gray-50"
+                    className="cursor-pointer hover:bg-[#004643]/5"
                     onClick={() => handleSort('code')}
                   >
                     Code {sortConfig.key === 'code' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </TableHead>
                   <TableHead
-                    className="cursor-pointer hover:bg-gray-50"
+                    className="cursor-pointer hover:bg-[#004643]/5"
                     onClick={() => handleSort('name')}
                   >
                     Name {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
@@ -257,14 +256,16 @@ const CollegeManagement = () => {
                         <div className="flex gap-2 justify-end">
                           <Button
                             size="sm"
-                            variant="outline"
+                            variant="ghost"
+                            className="text-gray-500 hover:text-[#004643] hover:bg-[#004643]/10"
                             onClick={() => openDialog(college)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button
                             size="sm"
-                            variant="destructive"
+                            variant="ghost"
+                            className="text-gray-500 hover:text-red-600 hover:bg-red-50"
                             onClick={() => handleDelete(college.code)}
                           >
                             <Trash2 className="h-4 w-4" />
