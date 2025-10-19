@@ -167,7 +167,6 @@ const ProgramManagement = () => {
     <div className="h-full overflow-y-auto">
       <div className="mb-6 shrink-0">
         <h1 className="text-2xl font-bold mb-1">Program Management</h1>
-        <p className="text-gray-600">Manage academic programs and their details</p>
       </div>
 
       <Card className="w-full bg-[#F7F5F0] border-[#004643]/10">
