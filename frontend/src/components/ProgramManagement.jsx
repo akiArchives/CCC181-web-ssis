@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Trash2, Edit, Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { useConfirm } from '@/contexts/ConfirmationContext';
 
 const ProgramManagement = () => {
   const [programs, setPrograms] = useState([]);
@@ -18,6 +19,7 @@ const ProgramManagement = () => {
   const [editingProgram, setEditingProgram] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'code', direction: 'asc' });
   const { addToast } = useToast();
+  const confirm = useConfirm();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(7);
@@ -106,7 +108,10 @@ const ProgramManagement = () => {
   };
 
   const handleDelete = async (code) => {
-    if (!confirm('Are you sure you want to delete this program? This will also delete all associated students.')) return;
+    if (!await confirm({
+      title: 'Delete Program',
+      message: 'Are you sure you want to delete this program? This will also delete all associated students.'
+    })) return;
     
     try {
       await api.deleteProgram(code);
@@ -118,7 +123,10 @@ const ProgramManagement = () => {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedPrograms.length} programs? This will also delete all associated students.`)) return;
+    if (!await confirm({
+      title: 'Bulk Delete Programs',
+      message: `Delete ${selectedPrograms.length} programs? This will also delete all associated students.`
+    })) return;
     
     try {
       await api.bulkDeletePrograms(selectedPrograms);

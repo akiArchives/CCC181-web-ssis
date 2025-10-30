@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Trash2, Edit, Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
+import { useConfirm } from '@/contexts/ConfirmationContext';
 
 const StudentManagement = () => {
   const [students, setStudents] = useState([]);
@@ -20,6 +21,7 @@ const StudentManagement = () => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
   const { addToast } = useToast();
+  const confirm = useConfirm();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(7);
@@ -128,7 +130,10 @@ const StudentManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this student?')) return;
+    if (!await confirm({
+      title: 'Delete Student',
+      message: 'Are you sure you want to delete this student?'
+    })) return;
     
     try {
       await api.deleteStudent(id);
@@ -140,7 +145,10 @@ const StudentManagement = () => {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selectedStudents.length} students?`)) return;
+    if (!await confirm({
+      title: 'Bulk Delete Students',
+      message: `Delete ${selectedStudents.length} students?`
+    })) return;
     
     try {
       await api.bulkDeleteStudents(selectedStudents);
