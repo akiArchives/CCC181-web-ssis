@@ -3,8 +3,8 @@ from sqlalchemy import or_
 
 class CollegeService:
     @staticmethod
-    def get_all_colleges(search_term=None, page=None, per_page=None):
-        """Retrieves all colleges, with an optional search filter."""
+    def get_all_colleges(search_term=None, page=None, per_page=None, sort_by='code', sort_order='asc'):
+        """Retrieves all colleges, with an optional search filter and sorting."""
         query = College.query
         if search_term:
             query = query.filter(
@@ -13,6 +13,15 @@ class CollegeService:
                     College.name.ilike(f'%{search_term}%')
                 )
             )
+            
+        sortable_columns = {
+            'code': College.code,
+            'name': College.name
+        }
+        
+        column = sortable_columns.get(sort_by)
+        if column is not None:
+            query = query.order_by(column.desc() if sort_order == 'desc' else column.asc())
         
         if page is not None and per_page is not None:
             return query.paginate(page=page, per_page=per_page, error_out=False)

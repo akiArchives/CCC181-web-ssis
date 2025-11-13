@@ -11,8 +11,10 @@ def get_programs():
     search = request.args.get('search', '').strip()
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    sort_by = request.args.get('sort_by', 'code')
+    sort_order = request.args.get('sort_order', 'asc')
     
-    pagination = ProgramService.get_all_programs(search, page, per_page)
+    pagination = ProgramService.get_all_programs(search, page, per_page, sort_by, sort_order)
     
     return jsonify({
         'data': [program.to_dict() for program in pagination.items],

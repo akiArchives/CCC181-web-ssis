@@ -4,8 +4,8 @@ import re
 
 class StudentService:
     @staticmethod
-    def get_all_students(search_term=None, page=None, per_page=None):
-        """Retrieves all students, with an optional search filter."""
+    def get_all_students(search_term=None, page=None, per_page=None, sort_by='id', sort_order='asc'):
+        """Retrieves all students, with an optional search filter and sorting."""
         query = Student.query
         if search_term:
             query = query.filter(
@@ -16,6 +16,20 @@ class StudentService:
                 )
             )
             
+        # Explicit mapping to ensure safety and correctness
+        sortable_columns = {
+            'id': Student.id,
+            'first_name': Student.first_name,
+            'last_name': Student.last_name,
+            'year_level': Student.year_level,
+            'gender': Student.gender,
+            'program_code': Student.program_code
+        }
+        
+        column = sortable_columns.get(sort_by)
+        if column is not None:
+            query = query.order_by(column.desc() if sort_order == 'desc' else column.asc())
+
         if page is not None and per_page is not None:
             return query.paginate(page=page, per_page=per_page, error_out=False)
             
@@ -55,7 +69,8 @@ class StudentService:
             last_name=data['last_name'].strip(),
             year_level=int(data['year_level']),
             gender=data['gender'],
-            program_code=program_code
+            program_code=program_code,
+            photo_url=data.get('photo_url')
         )
         
         db.session.add(new_student)
@@ -78,6 +93,8 @@ class StudentService:
         student.year_level = int(data.get('year_level', student.year_level))
         student.gender = data.get('gender', student.gender)
         student.program_code = data.get('program_code', student.program_code).strip().upper()
+        if 'photo_url' in data:
+            student.photo_url = data['photo_url']
         
         db.session.commit()
         return student

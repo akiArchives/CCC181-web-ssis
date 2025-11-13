@@ -27,21 +27,13 @@ const CollegeManagement = () => {
 
   useEffect(() => {
     fetchColleges();
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, sortConfig]);
 
-  const displayedColleges = React.useMemo(() => {
-    return [...colleges].sort((a, b) => {
-      const aVal = a[sortConfig.key] || '';
-      const bVal = b[sortConfig.key] || '';
-      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [colleges, sortConfig]);
+  const displayedColleges = colleges;
 
   const fetchColleges = async () => {
     try {
-      const response = await api.getColleges(search, currentPage, itemsPerPage);
+      const response = await api.getColleges(search, currentPage, itemsPerPage, sortConfig);
       setColleges(response.data);
       setTotalPages(response.meta.total_pages);
     } catch (err) {
@@ -54,6 +46,7 @@ const CollegeManagement = () => {
       key,
       direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     });
+    setCurrentPage(1);
   };
 
   const handleSearch = (e) => {

@@ -29,25 +29,17 @@ const ProgramManagement = () => {
 
   useEffect(() => {
     fetchPrograms();
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, sortConfig]);
 
   useEffect(() => {
     fetchColleges();
   }, []);
 
-  const displayedPrograms = React.useMemo(() => {
-    return [...programs].sort((a, b) => {
-      const aVal = a[sortConfig.key] || '';
-      const bVal = b[sortConfig.key] || '';
-      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [programs, sortConfig]);
+  const displayedPrograms = programs;
 
   const fetchPrograms = async () => {
     try {
-      const response = await api.getPrograms(search, '', currentPage, itemsPerPage);
+      const response = await api.getPrograms(search, '', currentPage, itemsPerPage, sortConfig);
       setPrograms(response.data);
       setTotalPages(response.meta.total_pages);
     } catch (err) {
@@ -69,6 +61,7 @@ const ProgramManagement = () => {
       key,
       direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     });
+    setCurrentPage(1);
   };
 
   const handleSearch = (e) => {

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit, Plus, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Trash2, Edit, Plus, Search, ChevronLeft, ChevronRight, User } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmationContext';
@@ -24,7 +24,9 @@ const StudentManagement = () => {
   const confirm = useConfirm();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(7);
+  const [itemsPerPage, setItemsPerPage] = useState(6);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   
   const [formData, setFormData] = useState({
     id: '',
@@ -32,32 +34,26 @@ const StudentManagement = () => {
     last_name: '',
     year_level: '',
     gender: '',
-    program_code: ''
+    program_code: '',
+    photo_url: ''
   });
   const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     fetchStudents();
-  }, [currentPage, itemsPerPage]);
+  }, [currentPage, itemsPerPage, sortConfig]);
 
   useEffect(() => {
     fetchPrograms();
     fetchColleges();
   }, []);
 
-  const displayedStudents = React.useMemo(() => {
-    return [...students].sort((a, b) => {
-      const aVal = a[sortConfig.key] || '';
-      const bVal = b[sortConfig.key] || '';
-      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [students, sortConfig]);
+  const displayedStudents = students;
 
   const fetchStudents = async () => {
     try {
-      const response = await api.getStudents({ search }, currentPage, itemsPerPage);
+      console.log('Fetching students with sort:', sortConfig);
+      const response = await api.getStudents({ search }, currentPage, itemsPerPage, sortConfig);
       setStudents(response.data);
       setTotalPages(response.meta.total_pages);
     } catch (err) {
@@ -88,6 +84,7 @@ const StudentManagement = () => {
       key,
       direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     });
+    setCurrentPage(1);
   };
 
   const handleSearch = (e) => {
@@ -116,10 +113,18 @@ const StudentManagement = () => {
     if (!validateForm()) return;
 
     try {
+      let finalPhotoUrl = formData.photo_url;
+
+      if (photoFile) {
+        finalPhotoUrl = await api.uploadStudentPhoto(photoFile);
+      }
+
+      const studentData = { ...formData, photo_url: finalPhotoUrl };
+
       if (editingStudent) {
-        await api.updateStudent(editingStudent.id, formData);
+        await api.updateStudent(editingStudent.id, studentData);
       } else {
-        await api.createStudent(formData);
+        await api.createStudent(studentData);
       }
       fetchStudents();
       closeDialog();
@@ -169,8 +174,10 @@ const StudentManagement = () => {
         last_name: student.last_name,
         year_level: student.year_level.toString(),
         gender: student.gender,
-        program_code: student.program_code
+        program_code: student.program_code,
+        photo_url: student.photo_url || ''
       });
+      setPhotoPreview(student.photo_url || null);
     } else {
       setEditingStudent(null);
       setFormData({
@@ -179,9 +186,12 @@ const StudentManagement = () => {
         last_name: '',
         year_level: '',
         gender: '',
-        program_code: ''
+        program_code: '',
+        photo_url: ''
       });
+      setPhotoPreview(null);
     }
+    setPhotoFile(null);
     setFormErrors({});
     setIsDialogOpen(true);
   };
@@ -195,9 +205,20 @@ const StudentManagement = () => {
       last_name: '',
       year_level: '',
       gender: '',
-      program_code: ''
+      program_code: '',
+      photo_url: ''
     });
+    setPhotoFile(null);
+    setPhotoPreview(null);
     setFormErrors({});
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
   };
 
   const toggleSelection = (id) => {
@@ -292,6 +313,7 @@ const StudentManagement = () => {
                       className="rounded"
                     />
                   </TableHead>
+                  <TableHead className="w-16">Photo</TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-[#004643]/5"
                     onClick={() => handleSort('id')}
@@ -310,9 +332,24 @@ const StudentManagement = () => {
                   >
                     Last Name {sortConfig.key === 'last_name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </TableHead>
-                  <TableHead>Year Level</TableHead>
-                  <TableHead>Gender</TableHead>
-                  <TableHead>Program</TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-[#004643]/5"
+                    onClick={() => handleSort('year_level')}
+                  >
+                    Year Level {sortConfig.key === 'year_level' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-[#004643]/5"
+                    onClick={() => handleSort('gender')}
+                  >
+                    Gender {sortConfig.key === 'gender' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-[#004643]/5"
+                    onClick={() => handleSort('program_code')}
+                  >
+                    Program {sortConfig.key === 'program_code' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
                   <TableHead>College</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -320,7 +357,7 @@ const StudentManagement = () => {
               <TableBody>
                 {displayedStudents.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                       No students found
                     </TableCell>
                   </TableRow>
@@ -334,6 +371,15 @@ const StudentManagement = () => {
                           onChange={() => toggleSelection(student.id)}
                           className="rounded"
                         />
+                      </TableCell>
+                      <TableCell>
+                        <div className="h-10 w-10 rounded-full bg-[#004643]/10 flex items-center justify-center border border-[#004643]/10 overflow-hidden">
+                          {student.photo_url ? (
+                            <img src={student.photo_url} alt="Student" className="h-full w-full object-cover" />
+                          ) : (
+                            <User className="h-6 w-6 text-[#004643]/50" />
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="font-medium">{student.id}</TableCell>
                       <TableCell>{student.first_name}</TableCell>
@@ -384,6 +430,21 @@ const StudentManagement = () => {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
+            <div className="flex flex-col items-center gap-4 my-4">
+              <div className="h-24 w-24 rounded-full bg-[#004643]/10 flex items-center justify-center border border-[#004643]/10 overflow-hidden relative">
+                {photoPreview ? (
+                  <img src={photoPreview} alt="Preview" className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-12 w-12 text-[#004643]/50" />
+                )}
+              </div>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="w-full max-w-xs cursor-pointer"
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div>
                 <label className="block text-sm font-medium mb-2">Student ID</label>

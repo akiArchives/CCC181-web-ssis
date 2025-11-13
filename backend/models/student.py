@@ -10,6 +10,7 @@ class Student(db.Model):
     year_level = db.Column(db.Integer, nullable=False)
     gender = db.Column(db.String(20), nullable=False)
     program_code = db.Column(db.String(20), db.ForeignKey('programs.code', ondelete='CASCADE'), nullable=False)
+    photo_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def to_dict(self):
@@ -24,5 +25,6 @@ class Student(db.Model):
             'program_name': self.program.name if self.program else None,
             'college_code': self.program.college_code if self.program else None,
             'college_name': self.program.college.name if self.program and self.program.college else None,
+            'photo_url': self.photo_url,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }

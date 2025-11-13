@@ -11,8 +11,10 @@ def get_students():
     search = request.args.get('search', '').strip()
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
+    sort_by = request.args.get('sort_by', 'id')
+    sort_order = request.args.get('sort_order', 'asc')
     
-    pagination = StudentService.get_all_students(search, page, per_page)
+    pagination = StudentService.get_all_students(search, page, per_page, sort_by, sort_order)
     
     return jsonify({
         'data': [student.to_dict() for student in pagination.items],

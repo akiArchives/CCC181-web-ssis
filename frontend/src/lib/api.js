@@ -1,6 +1,11 @@
-const API_URL = 'http://localhost:5000/api';
+import { createClient } from '@supabase/supabase-js';
 
-// Module-scoped token to support environments where localStorage may fail.
+const API_URL = 'http://localhost:5000/api';
+const SUPABASE_URL = 'https://scfdicipcqzscxxgdktq.supabase.co'; // Replace with your actual Supabase URL
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjZmRpY2lwY3F6c2N4eGdka3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxOTU5OTEsImV4cCI6MjA4MTc3MTk5MX0.3Bq2BIW5Kz1rAr3ZdVcIOm5F8p3fGuGMCymUYelrLpE'; // Replace with your actual Supabase Anon Key
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+
 let authToken = null;
 try {
   authToken = localStorage.getItem('token');
@@ -83,11 +88,15 @@ export const api = {
   },
 
   // Colleges
-  getColleges: async (search = '', page = 1, limit = 10) => {
+  getColleges: async (search = '', page = 1, limit = 10, sortConfig = null) => {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (page) params.append('page', page);
     if (limit) params.append('per_page', limit);
+    if (sortConfig) {
+      params.append('sort_by', sortConfig.key);
+      params.append('sort_order', sortConfig.direction);
+    }
 
     const response = await fetch(`${API_URL}/colleges?${params}`, {
       headers: getAuthHeaders(),
@@ -151,12 +160,16 @@ export const api = {
   },
 
   // Programs
-  getPrograms: async (search = '', collegeCode = '', page = 1, limit = 10) => {
+  getPrograms: async (search = '', collegeCode = '', page = 1, limit = 10, sortConfig = null) => {
     const params = new URLSearchParams();
     if (search) params.append('search', search);
     if (collegeCode) params.append('college_code', collegeCode);
     if (page) params.append('page', page);
     if (limit) params.append('per_page', limit);
+    if (sortConfig) {
+      params.append('sort_by', sortConfig.key);
+      params.append('sort_order', sortConfig.direction);
+    }
     
     const response = await fetch(`${API_URL}/programs?${params}`, {
       headers: getAuthHeaders(),
@@ -220,10 +233,15 @@ export const api = {
   },
 
   // Students
-  getStudents: async (filters = {}, page = 1, limit = 10) => {
+  getStudents: async (filters = {}, page = 1, limit = 10, sortConfig = null) => {
     const params = new URLSearchParams();
     if (page) params.append('page', page);
     if (limit) params.append('per_page', limit);
+    
+    if (sortConfig) {
+      params.append('sort_by', sortConfig.key);
+      params.append('sort_order', sortConfig.direction);
+    }
 
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.append(key, value);
@@ -301,5 +319,21 @@ export const api = {
       throw new Error(error.error || 'Failed to fetch statistics');
     }
     return response.json();
+  },
+
+  // Storage
+  uploadStudentPhoto: async (file) => {
+    const fileName = `${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage
+      .from('student-photos')
+      .upload(fileName, file);
+
+    if (error) throw new Error(error.message);
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('student-photos')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
   },
 };
