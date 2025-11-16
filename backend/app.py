@@ -1,8 +1,9 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
-from flask_migrate import Migrate
-from models import db, User
+from werkzeug.security import generate_password_hash
+from db import get_db_connection, init_db
+from psycopg2.extras import RealDictCursor
 from auth import auth_bp
 from routes.colleges import colleges_bp
 from routes.programs import programs_bp
@@ -14,14 +15,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
 
 CORS(app)
-db.init_app(app)
-migrate = Migrate(app, db)
 jwt = JWTManager(app)
 
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -32,20 +29,25 @@ app.register_blueprint(statistics_bp, url_prefix='/api/statistics')
 
 # Create tables
 with app.app_context():
-    db.create_all()
+    init_db()
     
     # Create default admin user if none exists
-    if not User.query.filter_by(username='admin').first():
-        admin = User(
-            username='admin',
-            email='admin@example.com',
-            full_name='System Administrator',
-            role='admin'
-        )
-        admin.set_password('admin123')  # Change this in production!
-        db.session.add(admin)
-        db.session.commit()
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute("SELECT * FROM users WHERE username = %s", ('admin',))
+    admin = cursor.fetchone()
+    
+    if not admin:
+        password_hash = generate_password_hash('admin123')
+        cursor.execute("""
+            INSERT INTO users (username, email, full_name, role, password_hash)
+            VALUES (%s, %s, %s, %s, %s)
+        """, ('admin', 'admin@example.com', 'System Administrator', 'admin', password_hash))
+        conn.commit()
         print("✓ Default admin user created (username: admin, password: admin123)")
+    
+    cursor.close()
+    conn.close()
     
     print("✓ Database tables created successfully!")
 

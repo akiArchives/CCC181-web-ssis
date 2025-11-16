@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from models import db
 from services.student_service import StudentService
 
 students_bp = Blueprint('students', __name__)
@@ -14,15 +13,15 @@ def get_students():
     sort_by = request.args.get('sort_by', 'id')
     sort_order = request.args.get('sort_order', 'asc')
     
-    pagination = StudentService.get_all_students(search, page, per_page, sort_by, sort_order)
+    result = StudentService.get_all_students(search, page, per_page, sort_by, sort_order)
     
     return jsonify({
-        'data': [student.to_dict() for student in pagination.items],
+        'data': result['items'],
         'meta': {
-            'page': pagination.page,
-            'per_page': pagination.per_page,
-            'total_pages': pagination.pages,
-            'total_items': pagination.total
+            'page': result['page'],
+            'per_page': result['per_page'],
+            'total_pages': result['pages'],
+            'total_items': result['total']
         }
     })
 
@@ -32,11 +31,10 @@ def create_student():
     data = request.json
     try:
         new_student = StudentService.create_student(data)
-        return jsonify(new_student.to_dict()), 201
+        return jsonify(new_student), 201
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
-        db.session.rollback()
         # In a real app, you would log the error `e` here
         return jsonify({'error': 'An internal server error occurred'}), 500
 
@@ -50,11 +48,10 @@ def update_student(id):
     data = request.json
     try:
         updated_student = StudentService.update_student(student, data)
-        return jsonify(updated_student.to_dict())
+        return jsonify(updated_student)
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
-        db.session.rollback()
         return jsonify({'error': 'An internal server error occurred'}), 500
 
 @students_bp.route('/<id>', methods=['DELETE'])
@@ -68,7 +65,6 @@ def delete_student(id):
         StudentService.delete_student(student)
         return jsonify({'message': 'Student deleted successfully'}), 200
     except Exception as e:
-        db.session.rollback()
         return jsonify({'error': 'An internal server error occurred'}), 500
 
 @students_bp.route('/bulk-delete', methods=['POST'])
@@ -81,5 +77,4 @@ def bulk_delete_students():
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
-        db.session.rollback()
         return jsonify({'error': 'An internal server error occurred'}), 500

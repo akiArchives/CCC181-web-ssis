@@ -1,37 +1,64 @@
-from models import db, College
-from sqlalchemy import or_
+from db import get_db_connection
+from psycopg2.extras import RealDictCursor
+import math
 
 class CollegeService:
     @staticmethod
     def get_all_colleges(search_term=None, page=None, per_page=None, sort_by='code', sort_order='asc'):
         """Retrieves all colleges, with an optional search filter and sorting."""
-        query = College.query
-        if search_term:
-            query = query.filter(
-                or_(
-                    College.code.ilike(f'%{search_term}%'),
-                    College.name.ilike(f'%{search_term}%')
-                )
-            )
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        try:
+            query = "SELECT * FROM colleges"
+            params = []
             
-        sortable_columns = {
-            'code': College.code,
-            'name': College.name
-        }
-        
-        column = sortable_columns.get(sort_by)
-        if column is not None:
-            query = query.order_by(column.desc() if sort_order == 'desc' else column.asc())
-        
-        if page is not None and per_page is not None:
-            return query.paginate(page=page, per_page=per_page, error_out=False)
+            if search_term:
+                query += " WHERE (code ILIKE %s OR name ILIKE %s)"
+                term = f"%{search_term}%"
+                params.extend([term, term])
             
-        return query.all()
+            # Sorting
+            valid_columns = ['code', 'name']
+            if sort_by in valid_columns:
+                query += f" ORDER BY {sort_by} {'DESC' if sort_order == 'desc' else 'ASC'}"
+            
+            if page is not None and per_page is not None:
+                count_query = f"SELECT COUNT(*) as total FROM ({query}) as subquery"
+                cursor.execute(count_query, tuple(params))
+                total = cursor.fetchone()['total']
+                
+                query += " LIMIT %s OFFSET %s"
+                offset = (page - 1) * per_page
+                params.extend([per_page, offset])
+                
+                cursor.execute(query, tuple(params))
+                items = cursor.fetchall()
+                
+                return {
+                    'items': items,
+                    'total': total,
+                    'pages': math.ceil(total / per_page),
+                    'page': page,
+                    'per_page': per_page
+                }
+            
+            cursor.execute(query, tuple(params))
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+            conn.close()
 
     @staticmethod
     def get_college_by_code(code):
         """Retrieves a single college by its code."""
-        return College.query.get(code)
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        try:
+            cursor.execute("SELECT * FROM colleges WHERE code = %s", (code,))
+            return cursor.fetchone()
+        finally:
+            cursor.close()
+            conn.close()
 
     @staticmethod
     def create_college(data):
@@ -42,33 +69,71 @@ class CollegeService:
         code = data['code'].strip().upper()
         name = data['name'].strip()
 
-        if College.query.get(code):
-            raise ValueError('College code already exists')
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        try:
+            cursor.execute("SELECT code FROM colleges WHERE code = %s", (code,))
+            if cursor.fetchone():
+                raise ValueError('College code already exists')
 
-        college = College(code=code, name=name)
-        db.session.add(college)
-        db.session.commit()
-        return college
+            cursor.execute(
+                "INSERT INTO colleges (code, name) VALUES (%s, %s) RETURNING *",
+                (code, name)
+            )
+            college = cursor.fetchone()
+            conn.commit()
+            return college
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()
 
     @staticmethod
     def update_college(college, data):
         """Updates an existing college."""
-        new_code = data.get('code', college.code).strip().upper()
+        old_code = college['code']
+        new_code = data.get('code', old_code).strip().upper()
         
-        if new_code != college.code and College.query.get(new_code):
-            raise ValueError('College code already exists')
-        
-        college.code = new_code
-        college.name = data.get('name', college.name).strip()
-        
-        db.session.commit()
-        return college
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        try:
+            if new_code != old_code:
+                cursor.execute("SELECT code FROM colleges WHERE code = %s", (new_code,))
+                if cursor.fetchone():
+                    raise ValueError('College code already exists')
+            
+            cursor.execute("""
+                UPDATE colleges SET code = %s, name = %s 
+                WHERE code = %s RETURNING *
+            """, (
+                new_code,
+                data.get('name', college['name']).strip(),
+                old_code
+            ))
+            
+            updated_college = cursor.fetchone()
+            conn.commit()
+            return updated_college
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
+            conn.close()
 
     @staticmethod
     def delete_college(college):
         """Deletes a college."""
-        db.session.delete(college)
-        db.session.commit()
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM colleges WHERE code = %s", (college['code'],))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
 
     @staticmethod
     def bulk_delete_colleges(codes):
@@ -76,6 +141,13 @@ class CollegeService:
         if not codes:
             raise ValueError('No codes provided')
         
-        num_deleted = College.query.filter(College.code.in_(codes)).delete(synchronize_session=False)
-        db.session.commit()
-        return num_deleted
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM colleges WHERE code IN %s", (tuple(codes),))
+            num_deleted = cursor.rowcount
+            conn.commit()
+            return num_deleted
+        finally:
+            cursor.close()
+            conn.close()

@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from models import db
 from services.college_service import CollegeService
 
 colleges_bp = Blueprint('colleges', __name__)
@@ -14,15 +13,15 @@ def get_colleges():
     sort_by = request.args.get('sort_by', 'code')
     sort_order = request.args.get('sort_order', 'asc')
     
-    pagination = CollegeService.get_all_colleges(search, page, per_page, sort_by, sort_order)
+    result = CollegeService.get_all_colleges(search, page, per_page, sort_by, sort_order)
     
     return jsonify({
-        'data': [college.to_dict() for college in pagination.items],
+        'data': result['items'],
         'meta': {
-            'page': pagination.page,
-            'per_page': pagination.per_page,
-            'total_pages': pagination.pages,
-            'total_items': pagination.total
+            'page': result['page'],
+            'per_page': result['per_page'],
+            'total_pages': result['pages'],
+            'total_items': result['total']
         }
     })
 
@@ -32,11 +31,10 @@ def create_college():
     data = request.json
     try:
         new_college = CollegeService.create_college(data)
-        return jsonify(new_college.to_dict()), 201
+        return jsonify(new_college), 201
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
-        db.session.rollback()
         return jsonify({'error': 'An internal server error occurred'}), 500
 
 @colleges_bp.route('/<code>', methods=['PUT'])
@@ -49,11 +47,10 @@ def update_college(code):
     data = request.json
     try:
         updated_college = CollegeService.update_college(college, data)
-        return jsonify(updated_college.to_dict())
+        return jsonify(updated_college)
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
-        db.session.rollback()
         return jsonify({'error': 'An internal server error occurred'}), 500
 
 @colleges_bp.route('/<code>', methods=['DELETE'])
@@ -67,7 +64,6 @@ def delete_college(code):
         CollegeService.delete_college(college)
         return jsonify({'message': 'College deleted successfully'}), 200
     except Exception as e:
-        db.session.rollback()
         return jsonify({'error': 'An internal server error occurred'}), 500
 
 @colleges_bp.route('/bulk-delete', methods=['POST'])
@@ -80,5 +76,4 @@ def bulk_delete_colleges():
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
-        db.session.rollback()
         return jsonify({'error': 'An internal server error occurred'}), 500

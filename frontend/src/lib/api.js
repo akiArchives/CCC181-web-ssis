@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
 const API_URL = 'http://localhost:5000/api';
-const SUPABASE_URL = 'https://scfdicipcqzscxxgdktq.supabase.co'; // Replace with your actual Supabase URL
+const SUPABASE_URL = 'https://scfdicipcqzscxxgdktq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjZmRpY2lwY3F6c2N4eGdka3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYxOTU5OTEsImV4cCI6MjA4MTc3MTk5MX0.3Bq2BIW5Kz1rAr3ZdVcIOm5F8p3fGuGMCymUYelrLpE'; // Replace with your actual Supabase Anon Key
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 

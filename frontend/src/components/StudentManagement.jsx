@@ -350,7 +350,12 @@ const StudentManagement = () => {
                   >
                     Program {sortConfig.key === 'program_code' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </TableHead>
-                  <TableHead>College</TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-[#004643]/5"
+                    onClick={() => handleSort('college_code')}
+                  >
+                    College {sortConfig.key === 'college_code' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -391,7 +396,7 @@ const StudentManagement = () => {
                       </TableCell>
                       <TableCell>{student.gender}</TableCell>
                       <TableCell>{student.program_code}</TableCell>
-                      <TableCell>{student.college_code}</TableCell>
+                      <TableCell title={student.college_name}>{student.college_code}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
                           <Button
