@@ -105,7 +105,7 @@ class StudentService:
         if not re.match(r'^\d{4}-\d{4}$', student_id):
             raise ValueError('Student ID must follow the format NNNN-NNNN (e.g., 2021-0001)')
 
-        program_code = data['program_code'].strip().upper()
+        program_code = data['program_code'].strip()
 
         try:
             # Check duplicates
@@ -162,11 +162,14 @@ class StudentService:
                     raise ValueError('New Student ID already exists')
             
             # Check program if changing
-            program_code = data.get('program_code', student['program_code']).strip().upper()
+            raw_program_code = data.get('program_code', student['program_code'])
+            program_code = raw_program_code.strip() if raw_program_code else None
+            
             if program_code != student['program_code']:
-                cursor.execute("SELECT code FROM programs WHERE code = %s", (program_code,))
-                if not cursor.fetchone():
-                    raise ValueError('Program does not exist')
+                if program_code:
+                    cursor.execute("SELECT code FROM programs WHERE code = %s", (program_code,))
+                    if not cursor.fetchone():
+                        raise ValueError(f'Program {program_code} does not exist')
 
             cursor.execute("""
                 UPDATE students 

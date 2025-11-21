@@ -122,6 +122,12 @@ const StudentManagement = () => {
       const studentData = { ...formData, photo_url: finalPhotoUrl };
 
       if (editingStudent) {
+        if (editingStudent.id !== studentData.id) {
+          if (!await confirm({
+            title: 'Update Student ID',
+            message: `Are you sure you want to change the Student ID from ${editingStudent.id} to ${studentData.id}?`
+          })) return;
+        }
         await api.updateStudent(editingStudent.id, studentData);
       } else {
         await api.createStudent(studentData);
@@ -457,7 +463,6 @@ const StudentManagement = () => {
                   value={formData.id}
                   onChange={(e) => setFormData({ ...formData, id: e.target.value.toUpperCase() })}
                   placeholder="e.g., 2021-0001"
-                  disabled={editingStudent !== null}
                 />
                 {formErrors.id && <p className="text-red-500 text-sm mt-1">{formErrors.id}</p>}
               </div>

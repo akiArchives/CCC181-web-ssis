@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from werkzeug.security import generate_password_hash
@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend/dist', static_url_path='/')
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
 
@@ -81,21 +81,13 @@ def expired_token_callback(jwt_header, jwt_data):
 
 # ============== TEST ROUTE ==============
 
-@app.route('/')
-def home():
-    return jsonify({
-        'message': 'Student Information System API',
-        'status': 'running',
-        'endpoints': [
-            '/api/auth/register',
-            '/api/auth/login',
-            '/api/auth/me',
-            '/api/colleges',
-            '/api/programs', 
-            '/api/students',
-            '/api/statistics'
-        ]
-    })
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    if path != "" and os.path.exists(app.static_folder + '/' + path):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

@@ -1,5 +1,6 @@
 from db import get_db_connection
 from psycopg2.extras import RealDictCursor
+import psycopg2
 import math
 
 class CollegeService:
@@ -9,18 +10,28 @@ class CollegeService:
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         try:
-            query = "SELECT * FROM colleges"
+            query = """
+                SELECT c.*, COUNT(p.code) as program_count 
+                FROM colleges c
+                LEFT JOIN programs p ON c.code = p.college_code
+            """
             params = []
+            where_clauses = []
             
             if search_term:
-                query += " WHERE (code ILIKE %s OR name ILIKE %s)"
+                where_clauses.append("(c.code ILIKE %s OR c.name ILIKE %s)")
                 term = f"%{search_term}%"
                 params.extend([term, term])
             
+            if where_clauses:
+                query += " WHERE " + " AND ".join(where_clauses)
+            
+            query += " GROUP BY c.code, c.name"
+            
             # Sorting
-            valid_columns = ['code', 'name']
-            if sort_by in valid_columns:
-                query += f" ORDER BY {sort_by} {'DESC' if sort_order == 'desc' else 'ASC'}"
+            sort_map = {'code': 'c.code', 'name': 'c.name', 'program_count': 'program_count'}
+            if sort_by in sort_map:
+                query += f" ORDER BY {sort_map[sort_by]} {'DESC' if sort_order == 'desc' else 'ASC'}"
             
             if page is not None and per_page is not None:
                 count_query = f"SELECT COUNT(*) as total FROM ({query}) as subquery"
@@ -116,6 +127,12 @@ class CollegeService:
             updated_college = cursor.fetchone()
             conn.commit()
             return updated_college
+        except psycopg2.errors.UniqueViolation:
+            conn.rollback()
+            raise ValueError('College name already exists')
+        except psycopg2.errors.ForeignKeyViolation:
+            conn.rollback()
+            raise ValueError('Cannot update code: Database constraint violation. Ensure ON UPDATE CASCADE is set.')
         except Exception as e:
             conn.rollback()
             raise e

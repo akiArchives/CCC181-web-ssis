@@ -11,9 +11,10 @@ class ProgramService:
         try:
             # Base query with join for college name sorting/display
             query = """
-                SELECT p.*, c.name as college_name 
+                SELECT p.*, c.name as college_name, COUNT(s.id) as student_count
                 FROM programs p 
                 LEFT JOIN colleges c ON p.college_code = c.code
+                LEFT JOIN students s ON p.code = s.program_code
             """
             params = []
             where_clauses = []
@@ -26,11 +27,13 @@ class ProgramService:
             if where_clauses:
                 query += " WHERE " + " AND ".join(where_clauses)
             
+            query += " GROUP BY p.code, c.name"
+            
             # Sorting logic
             if sort_by == 'college_name':
                 query += f" ORDER BY c.name {'DESC' if sort_order == 'desc' else 'ASC'}"
             else:
-                valid_columns = {'code': 'p.code', 'name': 'p.name', 'college_code': 'p.college_code'}
+                valid_columns = {'code': 'p.code', 'name': 'p.name', 'college_code': 'p.college_code', 'student_count': 'student_count'}
                 col = valid_columns.get(sort_by, 'p.code')
                 query += f" ORDER BY {col} {'DESC' if sort_order == 'desc' else 'ASC'}"
             

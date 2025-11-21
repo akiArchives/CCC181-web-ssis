@@ -72,6 +72,12 @@ const CollegeManagement = () => {
 
     try {
       if (editingCollege) {
+        if (editingCollege.code !== formData.code) {
+          if (!await confirm({
+            title: 'Update College Code',
+            message: `Are you sure you want to change the College Code from ${editingCollege.code} to ${formData.code}? This will update all associated programs and students.`
+          })) return;
+        }
         await api.updateCollege(editingCollege.code, formData);
       } else {
         await api.createCollege(formData);
@@ -228,7 +234,12 @@ const CollegeManagement = () => {
                   >
                     Name {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </TableHead>
-                  <TableHead>Programs</TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-[#004643]/5"
+                    onClick={() => handleSort('program_count')}
+                  >
+                    Programs {sortConfig.key === 'program_count' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -298,7 +309,6 @@ const CollegeManagement = () => {
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   placeholder="e.g., CCS"
-                  disabled={editingCollege !== null}
                 />
                 {formErrors.code && <p className="text-red-500 text-sm mt-1">{formErrors.code}</p>}
               </div>

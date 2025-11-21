@@ -88,6 +88,12 @@ const ProgramManagement = () => {
 
     try {
       if (editingProgram) {
+        if (editingProgram.code !== formData.code) {
+          if (!await confirm({
+            title: 'Update Program Code',
+            message: `Are you sure you want to change the Program Code from ${editingProgram.code} to ${formData.code}? This will update all associated students.`
+          })) return;
+        }
         await api.updateProgram(editingProgram.code, formData);
       } else {
         await api.createProgram(formData);
@@ -250,7 +256,12 @@ const ProgramManagement = () => {
                   >
                     College {sortConfig.key === 'college_name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                   </TableHead>
-                  <TableHead>Students</TableHead>
+                  <TableHead
+                    className="cursor-pointer hover:bg-[#004643]/5"
+                    onClick={() => handleSort('student_count')}
+                  >
+                    Students {sortConfig.key === 'student_count' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+                  </TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -321,7 +332,6 @@ const ProgramManagement = () => {
                   value={formData.code}
                   onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
                   placeholder="e.g., BSCS"
-                  disabled={editingProgram !== null}
                 />
                 {formErrors.code && <p className="text-red-500 text-sm mt-1">{formErrors.code}</p>}
               </div>

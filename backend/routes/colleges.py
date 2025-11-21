@@ -76,4 +76,5 @@ def bulk_delete_colleges():
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
     except Exception as e:
+        print(f"Error updating college: {e}")
         return jsonify({'error': 'An internal server error occurred'}), 500
