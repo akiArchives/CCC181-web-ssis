@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit, Plus, Search, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { Trash2, Edit, Plus, Search, ChevronLeft, ChevronRight, User, ArrowUp, ArrowDown } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmationContext';
@@ -19,7 +19,7 @@ const StudentManagement = () => {
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
-  const [sortConfig, setSortConfig] = useState({ key: 'id', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({ key: 'all', direction: 'asc' });
   const { addToast } = useToast();
   const confirm = useConfirm();
   const [currentPage, setCurrentPage] = useState(1);
@@ -53,7 +53,8 @@ const StudentManagement = () => {
   const fetchStudents = async () => {
     try {
       console.log('Fetching students with sort:', sortConfig);
-      const response = await api.getStudents({ search }, currentPage, itemsPerPage, sortConfig);
+      const sortParam = sortConfig.key === 'all' ? { key: 'id', direction: 'asc' } : sortConfig;
+      const response = await api.getStudents({ search }, currentPage, itemsPerPage, sortParam);
       setStudents(response.data);
       setTotalPages(response.meta.total_pages);
     } catch (err) {
@@ -122,12 +123,11 @@ const StudentManagement = () => {
       const studentData = { ...formData, photo_url: finalPhotoUrl };
 
       if (editingStudent) {
-        if (editingStudent.id !== studentData.id) {
-          if (!await confirm({
-            title: 'Update Student ID',
-            message: `Are you sure you want to change the Student ID from ${editingStudent.id} to ${studentData.id}?`
-          })) return;
-        }
+        const isIdChanged = editingStudent.id !== studentData.id;
+        if (!await confirm({
+          title: isIdChanged ? 'Update Student ID' : 'Update Student',
+          message: isIdChanged ? `Are you sure you want to change the Student ID from ${editingStudent.id} to ${studentData.id}?` : 'Are you sure you want to update this student?'
+        })) return;
         await api.updateStudent(editingStudent.id, studentData);
       } else {
         await api.createStudent(studentData);
@@ -260,15 +260,41 @@ const StudentManagement = () => {
       <Card className="w-full bg-[#F7F5F0] border-[#004643]/10">
         <CardHeader className="shrink-0">
           <div className="flex items-center justify-between gap-4">
-            <form onSubmit={handleSearch} className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#004643]/50 h-4 w-4" />
-                <Input
-                  placeholder="Search students..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 bg-white border-[#004643]/20 focus-visible:ring-[#004643]"
-                />
-            </form>
+            <div className="flex items-center gap-2 flex-1 max-w-lg">
+              <form onSubmit={handleSearch} className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#004643]/50 h-4 w-4" />
+                  <Input
+                    placeholder="Search students..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-10 bg-white border-[#004643]/20 focus-visible:ring-[#004643]"
+                  />
+              </form>
+              <Select value={sortConfig.key} onValueChange={handleSort}>
+                <SelectTrigger className="w-[140px] bg-white border-[#004643]/20">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="id">ID</SelectItem>
+                  <SelectItem value="first_name">First Name</SelectItem>
+                  <SelectItem value="last_name">Last Name</SelectItem>
+                  <SelectItem value="year_level">Year Level</SelectItem>
+                  <SelectItem value="gender">Gender</SelectItem>
+                  <SelectItem value="program_code">Program</SelectItem>
+                </SelectContent>
+              </Select>
+              {sortConfig.key !== 'all' && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleSort(sortConfig.key)}
+                  className="bg-white border-[#004643]/20 w-10 shrink-0"
+                >
+                  {sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+                </Button>
+              )}
+            </div>
             <div className="flex items-center gap-4">
               <div className="flex gap-2">
               {selectedStudents.length > 0 && (
