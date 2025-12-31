@@ -2,11 +2,22 @@ from db import get_db_connection
 from psycopg2.extras import RealDictCursor
 import re
 import math
+from flask import request
 
 class StudentService:
     @staticmethod
-    def get_all_students(search_term=None, page=None, per_page=None, sort_by='id', sort_order='asc'):
-        """Retrieves all students, with an optional search filter and sorting."""
+    def get_all_students(search_term=None, page=None, per_page=None, sort_by='id', sort_order='asc', program_code=None, year_level=None, gender=None):
+        
+        try:
+            if program_code is None:
+                program_code = request.args.get('program_code')
+            if year_level is None:
+                year_level = request.args.get('year_level')
+            if gender is None:
+                gender = request.args.get('gender')
+        except:
+            pass
+    
         conn = get_db_connection()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         try:
@@ -18,14 +29,29 @@ class StudentService:
                 LEFT JOIN colleges c ON p.college_code = c.code
             """
             params = []
+            conditions = []
             
             if search_term:
-                query += " WHERE (s.id ILIKE %s OR s.first_name ILIKE %s OR s.last_name ILIKE %s)"
+                conditions.append("(s.id ILIKE %s OR s.first_name ILIKE %s OR s.last_name ILIKE %s)")
                 term = f"%{search_term}%"
                 params.extend([term, term, term])
             
+            if program_code:
+                conditions.append("s.program_code = %s")
+                params.append(program_code)
+            
+            if year_level:
+                conditions.append("s.year_level = %s")
+                params.append(int(year_level))
+            
+            if gender:
+                conditions.append("s.gender = %s")
+                params.append(gender)
+            
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            
             # Sorting
-            # Map frontend sort keys to database columns with aliases
             sort_map = {
                 'id': 's.id',
                 'first_name': 's.first_name',

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit, Plus, Search, ChevronLeft, ChevronRight, User, ArrowUp, ArrowDown } from 'lucide-react';
+import { Trash2, Edit, Plus, Search, ChevronLeft, ChevronRight, User, ArrowUp, ArrowDown, Filter } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useToast } from '@/contexts/ToastContext';
 import { useConfirm } from '@/contexts/ConfirmationContext';
@@ -19,7 +19,10 @@ const StudentManagement = () => {
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'all', direction: 'asc' });
+  const [filterConfig, setFilterConfig] = useState({ program_code: '', year_level: '', gender: '' });
+  const [tempFilterConfig, setTempFilterConfig] = useState({ program_code: '', year_level: '', gender: '' });
   const { addToast } = useToast();
   const confirm = useConfirm();
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,7 +44,7 @@ const StudentManagement = () => {
 
   useEffect(() => {
     fetchStudents();
-  }, [currentPage, itemsPerPage, sortConfig]);
+  }, [currentPage, itemsPerPage, sortConfig, filterConfig]);
 
   useEffect(() => {
     fetchPrograms();
@@ -54,7 +57,7 @@ const StudentManagement = () => {
     try {
       console.log('Fetching students with sort:', sortConfig);
       const sortParam = sortConfig.key === 'all' ? { key: 'id', direction: 'asc' } : sortConfig;
-      const response = await api.getStudents({ search }, currentPage, itemsPerPage, sortParam);
+      const response = await api.getStudents({ search, ...filterConfig }, currentPage, itemsPerPage, sortParam);
       setStudents(response.data);
       setTotalPages(response.meta.total_pages);
     } catch (err) {
@@ -251,6 +254,25 @@ const StudentManagement = () => {
     return colors[year] || 'bg-gray-100 text-gray-800';
   };
 
+  const openFilterDialog = () => {
+    setTempFilterConfig(filterConfig);
+    setIsFilterDialogOpen(true);
+  };
+
+  const handleApplyFilter = () => {
+    setFilterConfig(tempFilterConfig);
+    setCurrentPage(1);
+    setIsFilterDialogOpen(false);
+  };
+
+  const handleResetFilter = () => {
+    setTempFilterConfig({
+      program_code: '',
+      year_level: '',
+      gender: ''
+    });
+  };
+
   return (
     <div className="h-full overflow-y-auto">
       <div className="mb-6 shrink-0">
@@ -294,6 +316,10 @@ const StudentManagement = () => {
                   {sortConfig.direction === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
                 </Button>
               )}
+              <Button variant="outline" onClick={openFilterDialog} className="bg-white border-[#004643]/20">
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+              </Button>
             </div>
             <div className="flex items-center gap-4">
               <div className="flex gap-2">
@@ -574,6 +600,76 @@ const StudentManagement = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+        <DialogContent className="max-w-md bg-[#F7F5F0] border-[#004643]/10">
+          <DialogHeader>
+            <DialogTitle>Filter Students</DialogTitle>
+            <DialogDescription>Select criteria to filter the student list.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Program</label>
+              <Select
+                value={tempFilterConfig.program_code}
+                onValueChange={(value) => setTempFilterConfig({ ...tempFilterConfig, program_code: value === 'all' ? '' : value })}
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="All Programs" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Programs</SelectItem>
+                  {programs.map(p => (
+                    <SelectItem key={p.code} value={p.code}>{p.code} - {p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Year Level</label>
+              <Select
+                value={tempFilterConfig.year_level}
+                onValueChange={(value) => setTempFilterConfig({ ...tempFilterConfig, year_level: value === 'all' ? '' : value })}
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="All Year Levels" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Year Levels</SelectItem>
+                  {[1, 2, 3, 4].map(year => (
+                    <SelectItem key={year} value={year.toString()}>{year} - {['1st', '2nd', '3rd', '4th'][year-1]} Year</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Gender</label>
+              <Select
+                value={tempFilterConfig.gender}
+                onValueChange={(value) => setTempFilterConfig({ ...tempFilterConfig, gender: value === 'all' ? '' : value })}
+              >
+                <SelectTrigger className="bg-white">
+                  <SelectValue placeholder="All Genders" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Genders</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleResetFilter} className="border-[#004643]/20 text-[#004643]">
+              Reset
+            </Button>
+            <Button onClick={handleApplyFilter} className="bg-[#004643] hover:bg-[#004643]/90">
+              Apply Filters
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
